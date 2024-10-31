@@ -1,0 +1,48 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!21 &2100000
+Material:
+  serializedVersion: 6
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: OvenFrame
+  m_Shader: {fileID: -6465566751694194690, guid: aee70b660918ba545a08416ad095118a, type: 3}
+  m_ShaderKeywords: MAIN_LIGHT_CALCULATE_SHADOWS _MAIN_LIGHT_SHADOWS_CASCADE _SHADOWS_SOFT
+    ADDITIONAL_LIGHT_CALCULATE_SHADOWS
+  m_LightmapFlags: 4
+  m_EnableInstancingVariants: 0
+  m_DoubleSidedGI: 0
+  m_CustomRenderQueue: -1
+  stringTagMap: {}
+  disabledShaderPasses: []
+  m_SavedProperties:
+    serializedVersion: 3
+    m_TexEnvs:
+    - Texture2D_875d8df7a4a949e9a68de856a44d36fe:
+        m_Texture: {fileID: 2800000, guid: 8c9d128d3ebc6a14eb4e40678d766e25, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - Texture2D_f4968b7415874aa7a399721467e29f53:
+        m_Texture: {fileID: 2800000, guid: 3a5998dc8ec391e4f9e48a2075f49fd6, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - unity_Lightmaps:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - unity_LightmapsInd:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - unity_ShadowMasks:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    m_Floats:
+    - Vector1_2fbd330c1bef4f39a74ec7877f57c060: 1.45
+    m_Colors:
+    - Color_44062144a44548b796c642526c86aca9: {r: 0.46226418, g: 0.46226418, b: 0.46226418, a: 0}
+    - Vector3_16373c8f1cfe4da0a3fc1fde5e435b1f: {r: 255, g: 255, b: 255, a: 0}
+  m_BuildTextureStacks: []
