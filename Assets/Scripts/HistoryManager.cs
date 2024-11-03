@@ -13,16 +13,17 @@ public class HistoryManager : MonoBehaviour
     public List<OrderItem> foodItems = new List<OrderItem>();
     public List<OrderItem> drinkItems = new List<OrderItem>();
 
-    public Orders orders = new Orders(new List<Order>());
+    public Orders orders = new Orders(new List<Order>(), new List<Order>());
 
     public GameObject hangerPrefab;
     public Queue<GameObject> hangers = new Queue<GameObject>();
+
+    List<Order> sessionHistory = new List<Order>();
 
     public List<Transform> hangerSpot = new List<Transform>();
     public List<bool> occupiedHanger = new List<bool>();
 
     public static HistoryManager instance;
-
     public GameObject confetti;
 
     // Start is called before the first frame update
@@ -40,13 +41,13 @@ public class HistoryManager : MonoBehaviour
 
     private IEnumerator CatchUpOnHistory()
     {
-        foreach (Order order in orders.orders)
+        foreach (Order order in orders.sessionOrders)
         {
             yield return new WaitForSeconds(0.3f);
             SpawnHanger(order.foodItem.itemName, order.drinkItem.itemName);
         }
 
-        while (orders.orders.Count < 3)
+        while (orders.sessionOrders.Count < 3)
         {
             yield return new WaitForSeconds(0.3f);
             StartCoroutine(generateOrder());
@@ -76,6 +77,7 @@ public class HistoryManager : MonoBehaviour
 
     public void SaveHistory()
     {
+        orders.allTimeHistory.AddRange(sessionHistory);
         string filePath = Application.persistentDataPath + fileName;
         string json = JsonUtility.ToJson(orders, true);
         File.WriteAllText(filePath, json);
@@ -87,7 +89,7 @@ public class HistoryManager : MonoBehaviour
         OrderItem food = foodItems[Random.Range(0, foodItems.Count)];
         OrderItem drink = drinkItems[Random.Range(0, drinkItems.Count)];
 
-        orders.orders.Add(new Order(food, drink));
+        orders.sessionOrders.Add(new Order(food, drink));
 
         yield return new WaitForSeconds(GameManager.instance.secondsOfStudying / 3.0f);
 
@@ -118,12 +120,13 @@ public class HistoryManager : MonoBehaviour
 
     public Order fetchCurrentOrder()
     {
-        return orders.orders[0];
+        return orders.sessionOrders[0];
     }
 
     public IEnumerator FinalizeOrder()
     {
-        orders.orders.RemoveAt(0);
+        sessionHistory.Add(new Order(orders.sessionOrders[0].foodItem, orders.sessionOrders[0].drinkItem));
+        orders.sessionOrders.RemoveAt(0);
 
         // Hanger
         GameObject hanger = hangers.Peek();

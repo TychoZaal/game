@@ -9,11 +9,14 @@ public class GameManager : MonoBehaviour
 {
     public HistoryManager HistoryManager;
 
+    [Tooltip("1500")]
     public int secondsOfStudying = 10;
+    [Tooltip("300")]
     public int secondsOfBreak = 5;
 
     public float studyTime = 0;
     public float breakTime = 0;
+    public float sessionTime = 0;
     public bool onBreak = false;
 
     public OvenAnimator animator;
@@ -102,6 +105,8 @@ public class GameManager : MonoBehaviour
 
     void UpdateTimer()
     {
+        sessionTime += Time.deltaTime;
+
         if (!onBreak)
         {
             TimeSpan t = TimeSpan.FromSeconds(secondsOfStudying - studyTime);

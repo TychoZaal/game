@@ -6,11 +6,13 @@ using UnityEngine;
 [System.Serializable]
 public class Orders // Contains a List of all 
 {
-    public List<Order> orders;
+    public List<Order> sessionOrders;
+    public List<Order> allTimeHistory;
 
-    public Orders(List<Order> orders)
+    public Orders(List<Order> sessionOrders, List<Order> allTimeHistory)
     {
-        this.orders = orders;
+        this.sessionOrders = sessionOrders;
+        this.allTimeHistory = allTimeHistory;
     }
 
     public Orders()
