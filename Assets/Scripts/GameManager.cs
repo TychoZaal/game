@@ -1,8 +1,10 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using TMPro;
 using UnityEngine;
+using UnityEngine.UI;
 using UnityEngine.VFX;
 
 public class GameManager : MonoBehaviour
@@ -18,6 +20,8 @@ public class GameManager : MonoBehaviour
     public float breakTime = 0;
     public float sessionTime = 0;
     public bool onBreak = false;
+    public bool inMenu = true;
+    public bool isSummarySession = true;
 
     public OvenAnimator animator;
 
@@ -26,7 +30,25 @@ public class GameManager : MonoBehaviour
     public Poof poof;
     public OvenPoof ovenPoof;
 
+    public GameObject blur, timers, summary;
+    public TextMeshProUGUI sessionTimer;
+
+    public Color activeColor, backgroundColor;
+    public Image sessionBackground, allTimeBackground;
+    public TextMeshProUGUI sessionButtonText, allTimeButtonText;
+
     public static GameManager instance;
+ 
+    public TextMeshProUGUI hours, minutes, seconds;
+    public TextMeshProUGUI hoursT, minutesT, secondsT;
+
+    [Tooltip("0:25:0")]
+    public double hoursS = 0, minutesS = 25, secondsS = 0;
+    [Tooltip("0:5:0")]
+    public double hoursB = 0, minutesB = 5, secondsB = 0;
+
+    public List<SummaryItem> summaryItems = new List<SummaryItem>();
+    public List<SummaryItem> summaryAllTimeItems = new List<SummaryItem>();
 
     // public TextMeshProUGUI timeText;
 
@@ -61,16 +83,30 @@ public class GameManager : MonoBehaviour
                 StartCoroutine(DoneWithBreak());
             }
         }
-
+        
         UpdateTimer();
 
         if (Input.GetKeyDown(KeyCode.Escape))
         {
-            ExitGame();
+            Pause();
         }
+
+        blur.SetActive(inMenu);
+
+        UpdateSummaryView();
     }
 
-    IEnumerator StartBreak()
+    public void SwitchToSession()
+    {
+        isSummarySession = true;
+    }
+
+    public void SwitchToAllTime()
+    {
+        isSummarySession = false;
+    }
+
+        IEnumerator StartBreak()
     {
         studyTime = 0;
         onBreak = true;
@@ -88,6 +124,16 @@ public class GameManager : MonoBehaviour
         StartCoroutine(poof.PoofPoof());
     }
 
+    public void StartStudying()
+    {
+        inMenu = false;
+
+        secondsOfStudying = (int)(secondsS + (minutesS * 60) + (hoursS * 3600));
+        secondsOfBreak = (int)(secondsB + (minutesB * 60) + (hoursB * 3600));
+
+        timers.SetActive(false);
+    }
+
     IEnumerator DoneWithBreak()
     {
         breakTime = 0;
@@ -97,30 +143,76 @@ public class GameManager : MonoBehaviour
         ovenSmoke.Play();
         coffeeSmoke.Play();
 
-        yield return new WaitForSeconds(1); 
+        yield return new WaitForSeconds(1);
 
         oven.shouldPulsate = true;
         coffee.shouldPulsate = true;
     }
 
+    public void ChangeHours(int diff)
+    {
+        hoursS += diff;
+
+        if (hoursS < 0) { hoursS = 0; }
+    }
+
+    public void ChangeMinutes(int diff)
+    {
+        minutesS += diff;
+
+        if (minutesS < 0) { minutesS = 0; }
+    }
+
+    public void ChangeSeconds(int diff)
+    {
+        secondsS += diff;
+
+        if (secondsS < 0) { secondsS = 0; }
+    }
+
+    public void ChangeHoursB(int diff)
+    {
+        hoursB += diff;
+
+        if (hoursB < 0) { hoursB = 0; }
+    }
+
+    public void ChangeMinutesB(int diff)
+    {
+        minutesB += diff;
+
+        if (minutesB < 0) { minutesB = 0; }
+    }
+
+    public void ChangeSecondsB(int diff)
+    {
+        secondsB += diff;
+
+        if (secondsB < 0) { secondsB = 0; }
+    }
+
     void UpdateTimer()
     {
         sessionTime += Time.deltaTime;
+        HistoryManager.instance.orders.allTimeSessionCounter += Time.deltaTime;
 
-        if (!onBreak)
-        {
-            TimeSpan t = TimeSpan.FromSeconds(secondsOfStudying - studyTime);
+        hours.text = hoursS.ToString("00") + ":";
+        minutes.text = minutesS.ToString("00") + ":";
+        seconds.text = secondsS.ToString("00");
 
-            string answer = string.Format("{0:D2}:{1:D2}:{2:D2}",
-                            t.Hours,
-                            t.Minutes,
-                            t.Seconds);
+        hoursT.text = hoursB.ToString("00") + ":";
+        minutesT.text = minutesB.ToString("00") + ":";
+        secondsT.text = secondsB.ToString("00");
 
-            // timeText.text = answer;
-        }
+        float timeToDisplay = isSummarySession ? sessionTime : HistoryManager.instance.orders.allTimeSessionCounter;
+        var time = TimeSpan.FromSeconds(timeToDisplay);
+        sessionTimer.text = string.Format("{0:D2}:{1:D2}:{2:D2}",
+            time.Hours,
+            time.Minutes,
+            time.Seconds);
     }
 
-    void ExitGame()
+    public void QuitGame()
     {
         HistoryManager.SaveHistory();
 
@@ -131,5 +223,64 @@ public class GameManager : MonoBehaviour
 #else
         Application.Quit();
 #endif
+    }
+
+    void Pause()
+    {
+        inMenu = !inMenu;
+        summary.SetActive(!timers.activeSelf && isSummarySession);
+    }
+
+    private void UpdateSummaryView()
+    {
+        sessionBackground.color = isSummarySession ? activeColor : backgroundColor;
+        sessionButtonText.color = isSummarySession ? backgroundColor : activeColor;
+
+        allTimeBackground.color = !isSummarySession ? activeColor : backgroundColor;
+        allTimeButtonText.color = !isSummarySession ? backgroundColor : activeColor;
+
+        // Reset all counts
+        foreach (var summaryItem in summaryItems)
+        {
+            summaryItem.UpdateDisplay(0);
+        }
+
+        var orders = isSummarySession ? HistoryManager.instance.sessionHistory : HistoryManager.instance.orders.allTimeHistory;
+
+        if (orders != null && orders.Count > 0)
+        {
+            var foodCounts = orders
+                .GroupBy(o => o.foodItem.itemName)
+                .Select(g => new { FoodName = g.Key, Count = g.Count() }).ToList();
+
+            var drinkCounts = orders
+                .GroupBy(o => o.drinkItem.itemName)
+                .Select(g => new { DrinkName = g.Key, Count = g.Count() }).ToList();
+
+            foreach (var food in foodCounts)
+            {
+                try
+                {
+                    var foodItem = summaryItems.First(item => item.itemName == food.FoodName);
+                    foodItem.UpdateDisplay(food.Count);
+                }
+                catch
+                {
+                    Debug.LogError("Unable to find: " + food.FoodName);
+                }
+            }
+
+            foreach (var drink in drinkCounts)
+            {
+                try
+                {
+                    var foodItem = summaryItems.First(item => item.itemName == drink.DrinkName);
+                    foodItem.UpdateDisplay(drink.Count);
+                }
+                catch {
+                    Debug.LogError("Unable to find: " + drink.DrinkName);
+                }                
+            }
+        }
     }
 }

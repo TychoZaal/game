@@ -13,12 +13,12 @@ public class HistoryManager : MonoBehaviour
     public List<OrderItem> foodItems = new List<OrderItem>();
     public List<OrderItem> drinkItems = new List<OrderItem>();
 
-    public Orders orders = new Orders(new List<Order>(), new List<Order>());
+    public Orders orders = new Orders(new List<Order>(), new List<Order>(), 0.0f);
 
     public GameObject hangerPrefab;
     public Queue<GameObject> hangers = new Queue<GameObject>();
 
-    List<Order> sessionHistory = new List<Order>();
+    public List<Order> sessionHistory = new List<Order>();
 
     public List<Transform> hangerSpot = new List<Transform>();
     public List<bool> occupiedHanger = new List<bool>();

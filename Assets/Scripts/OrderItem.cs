@@ -8,11 +8,13 @@ public class Orders // Contains a List of all
 {
     public List<Order> sessionOrders;
     public List<Order> allTimeHistory;
+    public float allTimeSessionCounter;
 
-    public Orders(List<Order> sessionOrders, List<Order> allTimeHistory)
+    public Orders(List<Order> sessionOrders, List<Order> allTimeHistory, float allTimeSessionCounter)
     {
         this.sessionOrders = sessionOrders;
         this.allTimeHistory = allTimeHistory;
+        this.allTimeSessionCounter = allTimeSessionCounter;
     }
 
     public Orders()
