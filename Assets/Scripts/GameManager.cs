@@ -21,6 +21,7 @@ public class GameManager : MonoBehaviour
     public float sessionTime = 0;
     public bool onBreak = false;
     public bool inMenu = true;
+    public bool inSelect = true;
     public bool isSummarySession = true;
 
     public OvenAnimator animator;
@@ -61,39 +62,45 @@ public class GameManager : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        if (!onBreak)
+        if (!inSelect)
         {
-            if (studyTime < secondsOfStudying)
+            if (!onBreak)
             {
-                studyTime += Time.deltaTime;
+                if (studyTime < secondsOfStudying)
+                {
+                    studyTime += Time.deltaTime;
+                }
+                else
+                {
+                    StartCoroutine(StartBreak());
+                }
             }
             else
             {
-                StartCoroutine(StartBreak());
+                if (breakTime < secondsOfBreak)
+                {
+                    breakTime += Time.deltaTime;
+                }
+                else
+                {
+                    StartCoroutine(DoneWithBreak());
+                }
             }
-        }
-        else
-        {
-            if (breakTime < secondsOfBreak)
+
+            sessionTime += Time.deltaTime;
+            HistoryManager.instance.orders.allTimeSessionCounter += Time.deltaTime;
+
+            if (Input.GetKeyDown(KeyCode.Escape))
             {
-                breakTime += Time.deltaTime;
+                Pause();
             }
-            else
-            {
-                StartCoroutine(DoneWithBreak());
-            }
+
+            blur.SetActive(inMenu);
+
+            UpdateSummaryView();
         }
-        
+
         UpdateTimer();
-
-        if (Input.GetKeyDown(KeyCode.Escape))
-        {
-            Pause();
-        }
-
-        blur.SetActive(inMenu);
-
-        UpdateSummaryView();
     }
 
     public void SwitchToSession()
@@ -106,7 +113,7 @@ public class GameManager : MonoBehaviour
         isSummarySession = false;
     }
 
-        IEnumerator StartBreak()
+    private IEnumerator StartBreak()
     {
         studyTime = 0;
         onBreak = true;
@@ -127,6 +134,7 @@ public class GameManager : MonoBehaviour
     public void StartStudying()
     {
         inMenu = false;
+        inSelect = false;
 
         secondsOfStudying = (int)(secondsS + (minutesS * 60) + (hoursS * 3600));
         secondsOfBreak = (int)(secondsB + (minutesB * 60) + (hoursB * 3600));
@@ -193,9 +201,6 @@ public class GameManager : MonoBehaviour
 
     void UpdateTimer()
     {
-        sessionTime += Time.deltaTime;
-        HistoryManager.instance.orders.allTimeSessionCounter += Time.deltaTime;
-
         hours.text = hoursS.ToString("00") + ":";
         minutes.text = minutesS.ToString("00") + ":";
         seconds.text = secondsS.ToString("00");
@@ -245,7 +250,12 @@ public class GameManager : MonoBehaviour
             summaryItem.UpdateDisplay(0);
         }
 
-        var orders = isSummarySession ? HistoryManager.instance.sessionHistory : HistoryManager.instance.orders.allTimeHistory;
+        var orders =  new List<Order>(HistoryManager.instance.sessionHistory);
+
+        if (!isSummarySession)
+        {
+            orders.AddRange(HistoryManager.instance.orders.allTimeHistory);
+        }
 
         if (orders != null && orders.Count > 0)
         {
