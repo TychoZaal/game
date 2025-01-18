@@ -42,6 +42,9 @@ public class GameManager : MonoBehaviour
  
     public TextMeshProUGUI hours, minutes, seconds;
     public TextMeshProUGUI hoursT, minutesT, secondsT;
+    public TextMeshProUGUI timeLeft;
+
+    public AudioSource ding, work;
 
     [Tooltip("0:25:0")]
     public double hoursS = 0, minutesS = 25, secondsS = 0;
@@ -115,6 +118,7 @@ public class GameManager : MonoBehaviour
 
     private IEnumerator StartBreak()
     {
+        ding.Play();
         studyTime = 0;
         onBreak = true;
         oven.shouldPulsate = false;
@@ -144,6 +148,7 @@ public class GameManager : MonoBehaviour
 
     IEnumerator DoneWithBreak()
     {
+        work.Play();
         breakTime = 0;
         onBreak = false;
         animator.CloseDoor();
@@ -157,6 +162,7 @@ public class GameManager : MonoBehaviour
         coffee.shouldPulsate = true;
     }
 
+    #region UI hours
     public void ChangeHours(int diff)
     {
         hoursS += diff;
@@ -198,6 +204,7 @@ public class GameManager : MonoBehaviour
 
         if (secondsB < 0) { secondsB = 0; }
     }
+    #endregion
 
     void UpdateTimer()
     {
@@ -209,14 +216,27 @@ public class GameManager : MonoBehaviour
         minutesT.text = minutesB.ToString("00") + ":";
         secondsT.text = secondsB.ToString("00");
 
+        // Time in session
         float timeToDisplay = isSummarySession ? sessionTime : HistoryManager.instance.orders.allTimeSessionCounter;
         var time = TimeSpan.FromSeconds(timeToDisplay);
-        sessionTimer.text = string.Format("{0:D2}:{1:D2}:{2:D2}",
+
+        // Time left in session
+        float timeLeftToDisplay = onBreak ? secondsOfBreak - breakTime : secondsOfStudying - studyTime;
+        var timeLeftAsTime = TimeSpan.FromSeconds(timeLeftToDisplay);
+
+        string timeInSession = string.Format("{0:D2}:{1:D2}:{2:D2}",
             time.Hours,
             time.Minutes,
             time.Seconds);
-    }
 
+        string timeLeftAsString = string.Format("{0:D2}:{1:D2}:{2:D2}",
+            timeLeftAsTime.Hours,
+            timeLeftAsTime.Minutes,
+            timeLeftAsTime.Seconds);
+
+        sessionTimer.text = timeInSession;
+        timeLeft.text = timeLeftAsString;
+    }
     public void QuitGame()
     {
         HistoryManager.SaveHistory();
